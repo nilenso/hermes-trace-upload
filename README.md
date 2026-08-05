@@ -23,9 +23,13 @@ cd hermes-trace-upload
 ```
 
 `install.sh` links this repository into both `$HERMES_HOME/plugins/traces` and
-`$HERMES_HOME/desktop-plugins/traces`, then enables the Python plugin. The
-backend routes require a gateway restart because plugin routes are mounted at
-startup.
+`$HERMES_HOME/desktop-plugins/traces`, then enables the Python plugin. When
+`traces` is available in the shell that runs the installer, it also records the
+**absolute resolved executable path** in the plugin config. This prevents a
+minimal desktop or service `PATH` from breaking npm, pnpm, nvm, Volta,
+Homebrew, or system-package installations. Existing plugin settings are never
+overwritten. The backend routes require a gateway restart because plugin routes
+are mounted at startup.
 
 ## Configure and use
 
