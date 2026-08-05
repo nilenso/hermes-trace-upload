@@ -76,16 +76,8 @@ def _executable(config: dict[str, str]) -> str:
         resolved = shutil.which(candidate)
         if resolved:
             return resolved
-        # Desktop-launched Hermes processes inherit a deliberately minimal PATH.
-        # pnpm's standard per-user global bin is therefore often absent even when
-        # `traces` works in a user's login shell. Support it without executing a
-        # shell or relaxing the configured-executable contract.
-        if candidate == "traces":
-            pnpm_global = Path.home() / ".local" / "share" / "pnpm" / "traces"
-            if pnpm_global.is_file() and os.access(pnpm_global, os.X_OK):
-                return str(pnpm_global)
     raise TraceProviderError(
-        f"Traces CLI '{candidate}' was not found. Set its absolute executable path in Traces settings."
+        f"Traces CLI '{candidate}' was not found. Add its bin directory to desktop.backend_path or set an absolute executable path in Traces settings."
     )
 
 
