@@ -1,0 +1,6 @@
+name: traces
+version: 0.1.0
+description: "Upload or refresh the current Hermes trace through a configured trace-host provider."
+author: "nilenso"
+provides_commands:
+  - trace-upload
