@@ -76,8 +76,21 @@ def _executable(config: dict[str, str]) -> str:
         resolved = shutil.which(candidate)
         if resolved:
             return resolved
+        shell = os.environ.get("SHELL")
+        if shell:
+            try:
+                probe = subprocess.run(
+                    [shell, "-lc", 'command -v -- "$1"', "hermes-traces-cli", candidate],
+                    stdin=subprocess.DEVNULL, capture_output=True, text=True,
+                    encoding="utf-8", errors="replace", timeout=5, check=False,
+                )
+                login_resolved = (probe.stdout or "").strip()
+                if probe.returncode == 0 and login_resolved and Path(login_resolved).is_file() and os.access(login_resolved, os.X_OK):
+                    return login_resolved
+            except (OSError, subprocess.TimeoutExpired):
+                pass
     raise TraceProviderError(
-        f"Traces CLI '{candidate}' was not found. Add its bin directory to desktop.backend_path or set an absolute executable path in Traces settings."
+        f"Traces CLI '{candidate}' was not found. Set its absolute executable path in Traces settings."
     )
 
 

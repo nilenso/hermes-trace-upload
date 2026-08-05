@@ -45,9 +45,23 @@ class TracesProviderTests(unittest.TestCase):
         self.assertIs(trace, fake.item)
         self.assertEqual("remote-session", result["trace_id"])
 
-    def test_stripped_desktop_path_reports_configured_recovery(self):
-        with patch.dict("os.environ", {"PATH": "/usr/bin:/bin"}, clear=False):
-            with self.assertRaisesRegex(provider.TraceProviderError, "desktop.backend_path"):
+    def test_bare_cli_uses_login_shell_path(self):
+        resolved = Path("/opt/custom/bin/traces")
+        completed = provider.subprocess.CompletedProcess([], 0, stdout=f"{resolved}\n", stderr="")
+        with (
+            patch.dict("os.environ", {"PATH": "/usr/bin:/bin", "SHELL": "/bin/bash"}, clear=False),
+            patch.object(provider.subprocess, "run", return_value=completed) as run,
+            patch.object(provider.Path, "is_file", return_value=True),
+            patch.object(provider.os, "access", return_value=True),
+        ):
+            result = provider._executable(dict(provider.DEFAULT_CONFIG))
+
+        self.assertEqual(str(resolved), result)
+        self.assertEqual(["/bin/bash", "-lc", 'command -v -- "$1"', "hermes-traces-cli", "traces"], run.call_args.args[0])
+
+    def test_missing_cli_reports_executable_override(self):
+        with patch.dict("os.environ", {"PATH": "/usr/bin:/bin", "SHELL": ""}, clear=False):
+            with self.assertRaisesRegex(provider.TraceProviderError, "absolute executable path"):
                 provider._executable(dict(provider.DEFAULT_CONFIG))
 
     def test_save_config_rejects_unknown_provider(self):
