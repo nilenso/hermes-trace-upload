@@ -45,6 +45,11 @@ class TracesProviderTests(unittest.TestCase):
         self.assertIs(trace, fake.item)
         self.assertEqual("remote-session", result["trace_id"])
 
+    def test_desktop_path_falls_back_to_pnpm_global_cli(self):
+        with patch.dict("os.environ", {"PATH": "/usr/bin:/bin"}, clear=False):
+            resolved = provider._executable(dict(provider.DEFAULT_CONFIG))
+        self.assertEqual(str(Path.home() / ".local/share/pnpm/traces"), resolved)
+
     def test_save_config_rejects_unknown_provider(self):
         with tempfile.TemporaryDirectory() as temp:
             with patch.object(provider, "config_path", return_value=Path(temp) / "plugin.json"):
